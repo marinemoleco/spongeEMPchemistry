@@ -70,13 +70,15 @@ rm(results)
 rm(fac)
 
 row_names <- data.frame(rownames(abundance))
-write.table(row_names, file="phylum_samples.txt", row.names = F) # save sample IDs to create with final.with.tax.table the offset-calculation-file-table / awk.txt = awk -F'\t' 'NR==FNR{arr[$1]++;next}{for(i=1; i<=NF; i++) if ($i in arr){a[i]++;}} { for (i in a) printf "%s\t", $i; printf "\n"}' phylum_samples.txt final.withtax.v14.tsv > final.phylum.txt
-system('awk -F'\t' 'NR==FNR{arr[$1]++;next}{for(i=1; i<=NF; i++) if ($i in arr){a[i]++;}} { for (i in a) printf "%s\t", $i; printf "\n"}' phylum_samples.txt final.withtax.v14.tsv > final.phylum.txt')
-read.table(file="final.phylum.txt", sep="\t", header=TRUE, row.names="OTU_ID", check.names = FALSE) -> emp.orig_all # this is the offset-calculation-file-table
+write.table(row_names, file="phylum_samples.txt", row.names = F, quote=FALSE, sep="\t") # save sample IDs to create with final.with.tax.table the offset-calculation-file-table
+
+## run the phylum.awk.sh once - system(command) is not working atm
+
+read.table(file="final.phylum.txt", sep="\t", header=TRUE, check.names = FALSE) -> emp.orig_all # this is the data for the offset-calculation-file-table
 
 emp.orig <- droplevels(emp.orig_all[,-2448]) # the awk script adds an NA column to the end, hence I need to remove that here
 
-emp.sum <- apply(emp.orig, 2, sum)
+emp.sum <- apply(emp.orig, 2, sum, na.rm=TRUE)
 emp.sum.df <- as.data.frame(emp.sum)
 emp.sum.df <- droplevels(merge(emp.sum.df, factors, by="row.names", keep=FALSE)) # sum file same obs. order as factor and abundance 
 rownames(emp.sum.df) <- emp.sum.df[,1]
